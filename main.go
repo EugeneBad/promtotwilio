@@ -3,19 +3,13 @@ package main
 import (
 	"os"
 
+	"./optionsHandler"
 	log "github.com/sirupsen/logrus"
 	"github.com/valyala/fasthttp"
 )
 
-type options struct {
-	AccountSid string
-	AuthToken  string
-	Receiver   string
-	Sender     string
-}
-
 func main() {
-	opts := options{
+	opts := optionsHandler.Options{
 		AccountSid: os.Getenv("SID"),
 		AuthToken:  os.Getenv("TOKEN"),
 		Receiver:   os.Getenv("RECEIVER"),
@@ -26,7 +20,7 @@ func main() {
 		log.Fatal("'SID', 'TOKEN' and 'SENDER' environment variables need to be set")
 	}
 
-	o := NewMOptionsWithHandler(&opts)
+	o := optionsHandler.NewMOptionsWithHandler(&opts)
 	err := fasthttp.ListenAndServe(":9090", o.HandleFastHTTP)
 	if err != nil {
 		log.Fatal("ListenAndServe: ", err)

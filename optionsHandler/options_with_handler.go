@@ -1,6 +1,7 @@
-package main
+package optionsHandler
 
 import (
+	"encoding/json"
 	"fmt"
 	"regexp"
 	"strings"
@@ -12,14 +13,21 @@ import (
 	"github.com/valyala/fasthttp"
 )
 
+type Options struct {
+	AccountSid string
+	AuthToken  string
+	Receiver   string
+	Sender     string
+}
+
 // OptionsWithHandler is a struct with a mux and shared credentials
 type OptionsWithHandler struct {
-	Options *options
+	Options *Options
 }
 
 // NewMOptionsWithHandler returns a OptionsWithHandler for http requests
 // with shared credentials
-func NewMOptionsWithHandler(o *options) OptionsWithHandler {
+func NewMOptionsWithHandler(o *Options) OptionsWithHandler {
 	return OptionsWithHandler{
 		o,
 	}
@@ -45,10 +53,10 @@ func (m OptionsWithHandler) sendRequest(ctx *fasthttp.RequestCtx) {
 	if !ctx.IsPost() {
 		ctx.SetStatusCode(fasthttp.StatusMethodNotAllowed)
 	} else {
-		if string(ctx.Request.Header.Peek("Content-Type")) != "application/json" {
+		body := ctx.PostBody()
+		if !json.Valid(body) {
 			ctx.SetStatusCode(fasthttp.StatusNotAcceptable)
 		} else {
-			body := ctx.PostBody()
 			status, _ := jsonparser.GetString(body, "status")
 
 			sendOptions := m.Options
@@ -77,7 +85,7 @@ func (m OptionsWithHandler) sendRequest(ctx *fasthttp.RequestCtx) {
 	}
 }
 
-func sendMessage(o *options, alert []byte) {
+func sendMessage(o *Options, alert []byte) {
 	c := twilio.NewClient(o.AccountSid, o.AuthToken)
 	body, _ := jsonparser.GetString(alert, "annotations", "summary")
 
