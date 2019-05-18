@@ -7,8 +7,10 @@ RUN mkdir /user && \
 WORKDIR /src
 RUN apk add --update --no-cache ca-certificates git
 
-COPY ./go.mod ./go.sum ./
-RUN go mod download
+RUN go get github.com/carlosdp/twiliogo
+RUN go get github.com/buger/jsonparser
+RUN go get github.com/sirupsen/logrus
+RUN go get github.com/valyala/fasthttp
 
 COPY ./ ./
 RUN CGO_ENABLED=0 go build \
@@ -23,5 +25,10 @@ COPY --from=builder /promtotwilio /promtotwilio
 
 EXPOSE 9090
 USER nobody:nobody
+
+ENV TOKEN=$TOKEN
+ENV SID=$SID
+ENV RECEIVER=$RECEIVER
+ENV SENDER=$SENDER
 
 ENTRYPOINT ["./promtotwilio"]
